@@ -174,10 +174,10 @@ export const update = (req, res) => {
 
             if (slug) { oldBlog.slug = slugify(slug).toLowerCase(); }
 
-            const strippedContent = striptags(body);
-            const excerpt0 = strippedContent.slice(0, 150);
-            if (body) { oldBlog.excerpt = excerpt0; 
-                oldBlog.body = body; }
+            // const strippedContent = striptags(body);
+            // const excerpt0 = strippedContent.slice(0, 150);
+            // if (body) { oldBlog.excerpt = excerpt0; 
+            //     oldBlog.body = body; }
 
 
             if (categories) { oldBlog.categories = categories.split(',') }
