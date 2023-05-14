@@ -170,17 +170,14 @@ export const update = (req, res) => {
             
             oldBlog = _.merge(oldBlog, fields);
 
-
             const { body, slug, categories, tags } = fields;
-
 
             if (slug) { oldBlog.slug = slugify(slug).toLowerCase(); }
 
-
-
             const strippedContent = striptags(body);
             const excerpt0 = strippedContent.slice(0, 150);
-            if (body) { oldBlog.excerpt = excerpt0;  }
+            if (body) { oldBlog.excerpt = excerpt0; 
+                oldBlog.body = body; }
 
 
             if (categories) { oldBlog.categories = categories.split(',') }
