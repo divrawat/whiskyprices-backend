@@ -154,7 +154,7 @@ export const update = (req, res) => {
         }
 
 
-        let form = new formidable.IncomingForm();
+        let form = new formidable.IncomingForm({ multiples: true });
         form.keepExtensions = true;
 
         form.parse(req, (err, fields, files) => {
@@ -169,7 +169,7 @@ export const update = (req, res) => {
 
             oldBlog = _.merge(oldBlog, fields);
       
-
+            const body0 = Array.isArray(fields.body) ? fields.body[0] : fields.body;
             const { body, slug, categories, tags } = fields;
 
             if (slug) { oldBlog.slug = slugify(slug).toLowerCase(); }
@@ -177,7 +177,7 @@ export const update = (req, res) => {
             const strippedContent = striptags(body);
             const excerpt0 = strippedContent.slice(0, 150);
             if (body) { oldBlog.excerpt = excerpt0; 
-                oldBlog.body = body; }
+                oldBlog.body = body0; }
 
 
             if (categories) { oldBlog.categories = categories.split(',') }
