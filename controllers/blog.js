@@ -101,7 +101,7 @@ export const create = (req, res) => {
         }
 
 
-
+        console.log('Fields:', fields);
 
         blog.save((err, result) => {
             if (err) {
