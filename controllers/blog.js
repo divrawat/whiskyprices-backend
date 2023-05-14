@@ -167,7 +167,7 @@ export const update = (req, res) => {
                 });
             }
 
-            oldBlog.body = fields.body;
+            
             oldBlog = _.merge(oldBlog, fields);
 
 
