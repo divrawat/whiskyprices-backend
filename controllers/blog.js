@@ -101,7 +101,6 @@ export const create = (req, res) => {
         }
 
 
-        console.log('Fields:', fields);
 
         blog.save((err, result) => {
             if (err) {
@@ -170,7 +169,6 @@ export const update = (req, res) => {
 
             oldBlog = _.merge(oldBlog, fields);
       
-            console.log('Old blog before merge:', oldBlog);
 
             const { body, slug, categories, tags } = fields;
 
@@ -196,7 +194,6 @@ export const update = (req, res) => {
                 oldBlog.photo.contentType = files.photo.type;
             }
 
-            console.log('Old blog after merge:', oldBlog);
 
 
             oldBlog.save((err, result) => {
