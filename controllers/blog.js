@@ -68,12 +68,10 @@ export const create = (req, res) => {
         blog.slug = slugify(slug).toLowerCase();
         blog.mtitle = mtitle;
         blog.mdesc = mdesc;
-
-
         blog.date = date;
 
-        const strippedContent = striptags(body);
-        const excerpt0 = strippedContent.slice(0, 150);
+        let strippedContent = striptags(body);
+        let excerpt0 = strippedContent.slice(0, 150);
         blog.excerpt = excerpt0;
 
 
@@ -168,16 +166,20 @@ export const update = (req, res) => {
             }
 
             
+            console.log('Fields:', fields);
+
             oldBlog = _.merge(oldBlog, fields);
+      
+            console.log('Old blog before merge:', oldBlog);
 
             const { body, slug, categories, tags } = fields;
 
             if (slug) { oldBlog.slug = slugify(slug).toLowerCase(); }
 
-            // const strippedContent = striptags(body);
-            // const excerpt0 = strippedContent.slice(0, 150);
-            // if (body) { oldBlog.excerpt = excerpt0; 
-            //     oldBlog.body = body; }
+            const strippedContent = striptags(body);
+            const excerpt0 = strippedContent.slice(0, 150);
+            if (body) { oldBlog.excerpt = excerpt0; 
+                oldBlog.body = body; }
 
 
             if (categories) { oldBlog.categories = categories.split(',') }
@@ -193,6 +195,9 @@ export const update = (req, res) => {
                 oldBlog.photo.data = fs.readFileSync(files.photo.filepath);
                 oldBlog.photo.contentType = files.photo.type;
             }
+
+            console.log('Old blog after merge:', oldBlog);
+
 
             oldBlog.save((err, result) => {
                 if (err) {
