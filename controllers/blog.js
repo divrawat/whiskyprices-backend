@@ -167,7 +167,7 @@ export const update = (req, res) => {
                 });
             }
 
-
+            oldBlog.body = fields.body;
             oldBlog = _.merge(oldBlog, fields);
 
 
@@ -180,7 +180,7 @@ export const update = (req, res) => {
 
             const strippedContent = striptags(body);
             const excerpt0 = strippedContent.slice(0, 150);
-            if (body) { oldBlog.excerpt = excerpt0; oldBlog.body = fields.body; }
+            if (body) { oldBlog.excerpt = excerpt0;  }
 
 
             if (categories) { oldBlog.categories = categories.split(',') }
