@@ -164,8 +164,6 @@ export const update = (req, res) => {
                 });
             }
 
-            
-            console.log('Fields:', fields);
 
             oldBlog = _.merge(oldBlog, fields);
       
