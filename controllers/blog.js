@@ -156,6 +156,7 @@ export const update = (req, res) => {
 
         let form = new formidable.IncomingForm();
         form.keepExtensions = true;
+        form.type = 'multipart';
 
         form.parse(req, (err, fields, files) => {
             if (err) {
