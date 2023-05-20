@@ -34,11 +34,11 @@ mongoose
 
 // middlewares
 app.use(morgan('dev'));
-//  app.use(bodyParser.json());
+app.use(bodyParser.json());
 app.use(cookieParser());
 
 
-app.use(bodyParser.json({limit: '50mb'}));
+// app.use(bodyParser.json({limit: '50mb'}));
 
 
 app.use('/api', blogRoutes);
@@ -58,7 +58,7 @@ if(process.env.NODE_ENV=== 'development'){
 
 // routes
 app.get('/', (req, res) => {
-    res.json({ time: Date().toString() });
+    res.json("Backend index");
 });
 
 // port
