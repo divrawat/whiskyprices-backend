@@ -39,6 +39,16 @@ export const create = (req, res) => {
                 error: 'slug is required'
             });
         }
+        if (!mtitle || !mtitle.length) {
+            return res.status(400).json({
+                error: 'mtitle is required'
+            });
+        }
+        if (!mdesc || !mdesc.length) {
+            return res.status(400).json({
+                error: 'mdesc is required'
+            });
+        }
 
 
         if (!body || body.length < 200) {
@@ -145,14 +155,12 @@ export const create = (req, res) => {
 export const update = (req, res) => {
     const slug = req.params.slug.toLowerCase();
 
-
     Blog.findOne({ slug }).exec((err, oldBlog) => {
         if (err) {
             return res.status(400).json({
                 error: errorHandler(err)
             });
         }
-
 
         let form = new formidable.IncomingForm();
         form.keepExtensions = true;
@@ -164,12 +172,31 @@ export const update = (req, res) => {
                 });
             }
 
+    
 
             oldBlog = _.merge(oldBlog, fields);
-      
 
-            const { body, slug, categories, tags } = fields;
+            const { title, mtitle, mdesc, body, slug, categories, tags } = fields;
 
+            if (mtitle === '') {
+                return res.status(400).json({
+                  error: 'MTitle is required'
+                });
+              }
+              
+              if (title === '') {
+                return res.status(400).json({
+                  error: 'Title is required'
+                });
+              }
+              
+              if (mdesc === '') {
+                return res.status(400).json({
+                  error: 'Mdesc is required'
+                });
+              }
+
+                         
             if (slug) { oldBlog.slug = slugify(slug).toLowerCase(); }
 
             const strippedContent = striptags(body);
@@ -191,9 +218,6 @@ export const update = (req, res) => {
                 oldBlog.photo.data = fs.readFileSync(files.photo.filepath);
                 oldBlog.photo.contentType = files.photo.type;
             }
-
-
-
 
             oldBlog.save((err, result) => {
                 if (err) {
@@ -318,9 +342,7 @@ export const read = (req, res) => {
         .select('_id title body slug mtitle mdesc date categories tags postedBy')
         .exec((err, data) => {
             if (err) {
-                // return res.json({
-                //     error: errorHandler(err)
-                // });
+             
                 return res.status(404).json({
                     error: 'Blogs not found'
                 });

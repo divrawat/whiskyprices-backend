@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router();
-import { create,list, listAllBlogsCategoriesTags, read, remove, update, photo, listRelated, listSearch, listByUser, allblogs, feeds } from "../controllers/blog.js"
+import { create, list, listAllBlogsCategoriesTags, read, remove, update, photo, listRelated, listSearch, listByUser, allblogs, feeds } from "../controllers/blog.js"
 import { requireSignin, adminMiddleware, authMiddleware, canUpdateDeleteBlog } from "../controllers/auth.js"
 
 router.post('/blog', requireSignin, adminMiddleware, create);

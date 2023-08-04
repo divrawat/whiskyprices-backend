@@ -25,8 +25,6 @@ export const preSignup = (req, res) => {
             <p>Please use the following link to activate your acccount:</p>
             <p>${process.env.CLIENT_URL}/auth/account/activate/${token}</p>
             <hr />
-            <p>This email may contain sensetive information</p>
-            <p>https://seoblog.com</p>
         `
         };
 
