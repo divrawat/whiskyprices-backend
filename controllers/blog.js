@@ -250,6 +250,20 @@ export const allblogs = (req,res)=>{
         res.json(data);
     });
 }
+
+export const allblogslugs = (req,res)=>{
+    Blog.find({})
+    .select('slug')
+    .exec((err, data) => {
+        if (err) {
+            return res.json({
+                error: errorHandler(err)
+            });
+        }
+        res.json(data);
+    });
+}
+
  
 
 export const feeds = (req,res)=>{
