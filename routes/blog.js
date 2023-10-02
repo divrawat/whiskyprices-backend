@@ -14,7 +14,7 @@ router.delete('/blog/:slug', requireSignin, adminMiddleware, remove);
 router.put('/blog/:slug', requireSignin, adminMiddleware, update);
 router.get('/blog/photo/:slug', photo);
 router.post('/blogs/related', listRelated);
-router.post('/allblogslugs', allblogslugs);
+router.get('/allblogslugs', allblogslugs);
 
 
 
