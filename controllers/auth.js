@@ -23,7 +23,7 @@ export const preSignup = (req, res) => {
             subject: `Account activation link`,
             html: `
             <p>Please use the following link to activate your acccount:</p>
-            <p>${process.env.CLIENT_URL}/auth/account/activate/${token}</p>
+            <p>${process.env.MAIN_URL}/auth/account/activate/${token}</p>
             <hr />
         `
         };
