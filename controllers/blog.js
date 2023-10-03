@@ -374,6 +374,7 @@ export const read = (req, res) => {
                 });
             }
             res.json(data);
+           
         });
 };
 
@@ -387,6 +388,9 @@ export const remove = (req, res) => {
         }
         res.json({
             message: 'Blog deleted successfully'
+        });
+        fetch(`${process.env.API_URL}/api/regenerate/${result.slug}`, {
+            method: 'POST',
         });
     });
 };
