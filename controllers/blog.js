@@ -236,7 +236,7 @@ export const update = (req, res) => {
 
 
 
-                fetch(`${process.env.MAIN_URL}/api/regenerate/?path=/${result.slug}`, {
+                fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${result.slug}`, {
                     method: 'POST',
                 })
                
