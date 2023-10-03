@@ -230,10 +230,27 @@ export const update = (req, res) => {
                     });
                 }
 
-                fetch(`${process.env.MAIN_URL}/api/regenerate/?path=/${result.slug}`);
+                // fetch(`${process.env.MAIN_URL}/api/regenerate/?path=/${result.slug}`);
                 res.json(result);
                 
 
+
+
+                fetch(`${process.env.MAIN_URL}/api/regenerate/?path=/${result.slug}`)
+                .then(response => {
+                    console.log('Fetch response:', response); // Log the response
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Fetch success:', data); // Log the success data
+                })
+                .catch(error => {
+                    console.error('Error during fetch:', error); // Log any errors
+                });
+            console.log('After fetch');
             });
         });
     });
