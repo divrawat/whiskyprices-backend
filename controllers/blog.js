@@ -236,7 +236,8 @@ export const update = (req, res) => {
 
         
                 res.json(result);
-                 fetch(`${process.env.API_URL}/api/regenerate?slug=${result.slug}`, {
+                
+                 fetch('https://frontend-app.vercel.app/api/regenerate', {
                     method: 'POST',
                 });
 
