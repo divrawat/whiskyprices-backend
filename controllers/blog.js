@@ -144,6 +144,12 @@ export const create = (req, res) => {
                 }
             );
 
+
+            fetch(`${process.env.API_URL}/api/regenerate/${result.slug}`, {
+                method: 'POST',
+            });
+            
+
         });
 
     });
@@ -226,7 +232,13 @@ export const update = (req, res) => {
                     });
                 }
                 // result.photo = undefined;
+
+
+        
                 res.json(result);
+                fetch(`${process.env.API_URL}/api/regenerate/${result.slug}`, {
+                    method: 'POST',
+                });
             });
         });
     });
