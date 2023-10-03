@@ -232,7 +232,7 @@ export const update = (req, res) => {
                 // result.photo = undefined;
 
 
-                fetch(`${process.env.MAIN_URL}/api/regenerate/?path=${result.slug}`);
+                fetch(`${process.env.MAIN_URL}/api/regenerate/?path=/${result.slug}`);
                 res.json(result);
                 
                 // fetch(`${process.env.API_URL}/api/regenerate/${result.slug}`, {
