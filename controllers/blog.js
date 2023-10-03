@@ -150,6 +150,10 @@ export const create = (req, res) => {
 
         });
 
+        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${blog.slug}`, {
+            method: 'POST',
+        })
+
     });
 };
 
@@ -230,12 +234,8 @@ export const update = (req, res) => {
                     });
                 }
 
-                // fetch(`${process.env.MAIN_URL}/api/regenerate/?path=/${result.slug}`);
                 res.json(result);
                 
-
-
-
                 fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${result.slug}`, {
                     method: 'POST',
                 })
