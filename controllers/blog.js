@@ -154,6 +154,11 @@ export const create = (req, res) => {
             method: 'POST',
         })
 
+        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, {
+            method: 'POST',
+        })
+
+
     });
 };
 
@@ -237,6 +242,10 @@ export const update = (req, res) => {
                 res.json(result);
                 
                 fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${result.slug}`, {
+                    method: 'POST',
+                })
+
+                fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, {
                     method: 'POST',
                 })
                
