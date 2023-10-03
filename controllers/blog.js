@@ -236,7 +236,7 @@ export const update = (req, res) => {
 
         
                 res.json(result);
-                fetch(`${process.env.API_URL}/api/regenerate/${result.slug}`, {
+                 fetch(`${process.env.API_URL}/api/regenerate?slug=${result.slug}`, {
                     method: 'POST',
                 });
 
