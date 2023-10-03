@@ -8,7 +8,7 @@ import fs from "fs"
 import slugify from "slugify"
 import User from "../models/user.js"
 import striptags from 'striptags';
-
+import "dotenv/config.js";
 
 export const create = (req, res) => {
     let form = new formidable.IncomingForm();
@@ -155,93 +155,89 @@ export const create = (req, res) => {
 
 
 
-const fetchRegenerate = async (slug) => {
-    try {
-        const response = await fetch(`${process.env.MAIN_URL}/api/regenerate/?path=/${slug}`);
-        if (!response.ok) {
-            throw new Error(`Fetch failed with status ${response.status}`);
-        }
-    } catch (error) {
-        console.error('Error during fetch:', error.message);
-    }
-};
 
-export const update = async (req, res) => {
+export const update = (req, res) => {
     const slug = req.params.slug.toLowerCase();
 
-    try {
-        const oldBlog = await findOneBlog({ slug });
+    Blog.findOne({ slug }).exec((err, oldBlog) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
 
         let form = new formidable.IncomingForm();
         form.keepExtensions = true;
 
-        const parseForm = promisify(form.parse).bind(form);
-        const { fields, files } = await parseForm(req);
-
-        oldBlog.merge(fields);
-
-        const { title, mtitle, mdesc, body, categories, tags } = fields;
-
-        if (!mtitle.trim()) {
-            return res.status(400).json({
-                error: 'MTitle is required'
-            });
-        }
-
-        if (!title.trim()) {
-            return res.status(400).json({
-                error: 'Title is required'
-            });
-        }
-
-        if (!mdesc.trim()) {
-            return res.status(400).json({
-                error: 'Mdesc is required'
-            });
-        }
-
-        if (fields.slug) {
-            oldBlog.slug = slugify(fields.slug).toLowerCase();
-        }
-
-        const strippedContent = striptags(body);
-        const excerpt = strippedContent.slice(0, 150);
-
-        if (body) {
-            oldBlog.excerpt = excerpt;
-        }
-
-        if (fields.categories) {
-            oldBlog.categories = fields.categories.split(',');
-        }
-
-        if (fields.tags) {
-            oldBlog.tags = fields.tags.split(',');
-        }
-
-        if (files.photo) {
-            if (files.photo.size > 10000000) {
+        form.parse(req, (err, fields, files) => {
+            if (err) {
                 return res.status(400).json({
-                    error: 'Image should be less than 1mb in size'
+                    error: 'Image could not upload'
                 });
             }
-            oldBlog.photo.data = fs.readFileSync(files.photo.filepath);
-            oldBlog.photo.contentType = files.photo.type;
-        }
 
-        const result = await saveBlog(oldBlog);
+    
 
-        await fetchRegenerate(result.slug);
+            oldBlog = _.merge(oldBlog, fields);
 
-        return res.json(result);
-    } catch (error) {
-        console.error('Error during blog update:', error.message);
-        return res.status(400).json({
-            error: errorHandler(error)
+            const { title, mtitle, mdesc, body, slug, categories, tags } = fields;
+
+            if (mtitle === '') {
+                return res.status(400).json({
+                  error: 'MTitle is required'
+                });
+              }
+              
+              if (title === '') {
+                return res.status(400).json({
+                  error: 'Title is required'
+                });
+              }
+              
+              if (mdesc === '') {
+                return res.status(400).json({
+                  error: 'Mdesc is required'
+                });
+              }
+
+                         
+            if (slug) { oldBlog.slug = slugify(slug).toLowerCase(); }
+
+            const strippedContent = striptags(body);
+            const excerpt0 = strippedContent.slice(0, 150);
+            if (body) { oldBlog.excerpt = excerpt0; }
+                
+
+
+            if (categories) { oldBlog.categories = categories.split(',') }
+            if (tags) { oldBlog.tags = tags.split(','); }
+
+
+            if (files.photo) {
+                if (files.photo.size > 10000000) {
+                    return res.status(400).json({
+                        error: 'Image should be less then 1mb in size'
+                    });
+                }
+                oldBlog.photo.data = fs.readFileSync(files.photo.filepath);
+                oldBlog.photo.contentType = files.photo.type;
+            }
+
+            oldBlog.save((err, result) => {
+                if (err) {
+                    return res.status(400).json({
+                        error: errorHandler(err)
+                    });
+                }
+
+                fetch(`${process.env.MAIN_URL}/api/regenerate/?path=/${result.slug}`);
+                res.json(result);
+                
+
+            });
         });
-    }
+    });
 };
-
 
 
 
