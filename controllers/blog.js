@@ -145,9 +145,7 @@ export const create = (req, res) => {
             );
 
 
-            fetch(`${process.env.API_URL}/api/regenerate/${result.slug}`, {
-                method: 'POST',
-            });
+            
             
 
         });
@@ -237,9 +235,14 @@ export const update = (req, res) => {
         
                 res.json(result);
                 
-                 fetch('https://frontend-app.vercel.app/api/regenerate', {
-                    method: 'POST',
+                // fetch(`${process.env.API_URL}/api/regenerate/${result.slug}`, {
+                //     method: 'POST',
+                // });
+
+                fetch(`${process.env.MAIN_URL}/api/regenerate/?path=${result.slug}`, {
+                    method: 'GET',
                 });
+                
 
                 console.log(result.slug);
             });
