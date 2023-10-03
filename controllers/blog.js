@@ -232,19 +232,19 @@ export const update = (req, res) => {
                 // result.photo = undefined;
 
 
-        
+                fetch(`${process.env.MAIN_URL}/api/regenerate/?path=${result.slug}`);
                 res.json(result);
                 
                 // fetch(`${process.env.API_URL}/api/regenerate/${result.slug}`, {
                 //     method: 'POST',
                 // });
 
-                fetch(`${process.env.MAIN_URL}/api/regenerate/?path=${result.slug}`, {
-                    method: 'GET',
-                });
+                // fetch(`${process.env.MAIN_URL}/api/regenerate/?path=${result.slug}`, {
+                //     method: 'GET',
+                // });
+
                 
 
-                console.log(result.slug);
             });
         });
     });
