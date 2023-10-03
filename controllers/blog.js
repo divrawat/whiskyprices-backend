@@ -239,6 +239,8 @@ export const update = (req, res) => {
                 fetch(`${process.env.API_URL}/api/regenerate/${result.slug}`, {
                     method: 'POST',
                 });
+
+                console.log(result.slug);
             });
         });
     });
