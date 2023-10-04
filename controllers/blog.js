@@ -399,9 +399,14 @@ export const remove = (req, res) => {
         res.json({
             message: 'Blog deleted successfully'
         });
-        fetch(`${process.env.API_URL}/api/regenerate/${result.slug}`, {
+
+        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${result.slug}`, {
             method: 'POST',
-        });
+        })
+
+        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, {
+            method: 'POST',
+        })
     });
 };
 
