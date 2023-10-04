@@ -143,10 +143,7 @@ export const create = (req, res) => {
                     }
                 }
             );
-
-
-            
-            
+           
 
         });
 
@@ -400,7 +397,7 @@ export const remove = (req, res) => {
             message: 'Blog deleted successfully'
         });
 
-        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${result.slug}`, {
+        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${slug}`, {
             method: 'POST',
         })
 
