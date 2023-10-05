@@ -69,7 +69,7 @@ export const create = (req, res) => {
             });
         }
 
-         
+
 
         let blog = new Blog();
         blog.title = title;
@@ -93,10 +93,6 @@ export const create = (req, res) => {
 
         // blog.categories = arrayOfCategories;
         // blog.tags = arrayOfTags;
-
-// if(!files.photo){
-//     blog.photo=""
-// }
 
 
         if (files.photo) {
@@ -143,17 +139,22 @@ export const create = (req, res) => {
                     }
                 }
             );
-           
+
+
+            fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${blog.slug}`, {
+                method: 'POST',
+            })
+    
+    
+            fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, {
+                method: 'POST',
+            })
 
         });
 
-        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${blog.slug}`, {
-            method: 'POST',
-        })
+        
 
-        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, {
-            method: 'POST',
-        })
+
 
 
     });
@@ -182,7 +183,7 @@ export const update = (req, res) => {
                 });
             }
 
-    
+
 
             oldBlog = _.merge(oldBlog, fields);
 
@@ -190,29 +191,29 @@ export const update = (req, res) => {
 
             if (mtitle === '') {
                 return res.status(400).json({
-                  error: 'MTitle is required'
+                    error: 'MTitle is required'
                 });
-              }
-              
-              if (title === '') {
-                return res.status(400).json({
-                  error: 'Title is required'
-                });
-              }
-              
-              if (mdesc === '') {
-                return res.status(400).json({
-                  error: 'Mdesc is required'
-                });
-              }
+            }
 
-                         
+            if (title === '') {
+                return res.status(400).json({
+                    error: 'Title is required'
+                });
+            }
+
+            if (mdesc === '') {
+                return res.status(400).json({
+                    error: 'Mdesc is required'
+                });
+            }
+
+
             if (slug) { oldBlog.slug = slugify(slug).toLowerCase(); }
 
             const strippedContent = striptags(body);
             const excerpt0 = strippedContent.slice(0, 150);
             if (body) { oldBlog.excerpt = excerpt0; }
-                
+
 
 
             if (categories) { oldBlog.categories = categories.split(',') }
@@ -237,7 +238,7 @@ export const update = (req, res) => {
                 }
 
                 res.json(result);
-                
+
                 fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${result.slug}`, {
                     method: 'POST',
                 })
@@ -245,7 +246,7 @@ export const update = (req, res) => {
                 fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, {
                     method: 'POST',
                 })
-               
+
             });
         });
     });
@@ -253,55 +254,75 @@ export const update = (req, res) => {
 
 
 
+export const remove = (req, res) => {
+    const slug = req.params.slug.toLowerCase();
+    Blog.findOneAndRemove({ slug }).exec((err, data) => {
+        if (err) {
+            return res.json({
+                error: errorHandler(err)
+            });
+        }
+        res.json({
+            message: 'Blog deleted successfully'
+        });
 
+        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${slug}`, {
+            method: 'POST',
+        })
+
+        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, {
+            method: 'POST',
+        })
+    });
+};
 
 // list, listAllBlogsCategoriesTags, read, remove, update
 
-export const allblogs = (req,res)=>{
+export const allblogs = (req, res) => {
     Blog.find({}).sort({ date: -1 })
-    .select('_id slug date')
-    .exec((err, data) => {
-        if (err) {
-            return res.json({
-                error: errorHandler(err)
-            });
-        }
-        res.json(data);
-    });
+        .select('_id slug date')
+        .exec((err, data) => {
+            if (err) {
+                return res.json({
+                    error: errorHandler(err)
+                });
+            }
+            res.json(data);
+        });
 }
 
-export const allblogslugs = (req,res)=>{
+export const allblogslugs = (req, res) => {
     Blog.find({})
-    .select('slug')
-    .exec((err, data) => {
-        if (err) {
-            return res.json({
-                error: errorHandler(err)
-            });
-        }
-        res.json(data);
-    });
+        .select('slug')
+        .exec((err, data) => {
+            if (err) {
+                return res.json({
+                    error: errorHandler(err)
+                });
+            }
+            res.json(data);
+        });
 }
 
- 
 
-export const feeds = (req,res)=>{
+
+export const feeds = (req, res) => {
     Blog.find({}).sort({ date: -1 })
-    .populate('postedBy', '_id name username')
-    .select('_id title excerpt mdesc slug date body postedBy')
-    .limit(7) 
-    .exec((err, data) => {
-        if (err) {
-            return res.json({
-                error: errorHandler(err)
-            });
-        }
-        res.json(data);
-    });
+        .populate('postedBy', '_id name username')
+        .select('_id title excerpt mdesc slug date body postedBy')
+        .limit(7)
+        .exec((err, data) => {
+            if (err) {
+                return res.json({
+                    error: errorHandler(err)
+                });
+            }
+            res.json(data);
+        });
 }
 
 
-  
+
 
 
 
@@ -375,37 +396,17 @@ export const read = (req, res) => {
         .select('_id title body slug mtitle mdesc date categories tags postedBy')
         .exec((err, data) => {
             if (err) {
-             
+
                 return res.status(404).json({
                     error: 'Blogs not found'
                 });
             }
             res.json(data);
-           
+
         });
 };
 
-export const remove = (req, res) => {
-    const slug = req.params.slug.toLowerCase();
-    Blog.findOneAndRemove({ slug }).exec((err, data) => {
-        if (err) {
-            return res.json({
-                error: errorHandler(err)
-            });
-        }
-        res.json({
-            message: 'Blog deleted successfully'
-        });
 
-        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${slug}`, {
-            method: 'POST',
-        })
-
-        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, {
-            method: 'POST',
-        })
-    });
-};
 
 
 
@@ -475,7 +476,7 @@ export const listByUser = (req, res) => {
         }
         let userId = user._id;
         Blog.find({ postedBy: userId })
-        .populate('postedBy', '_id name')
+            .populate('postedBy', '_id name')
             .select('_id title date postedBy slug')
             .exec((err, data) => {
                 if (err) {
