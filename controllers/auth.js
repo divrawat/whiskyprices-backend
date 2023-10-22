@@ -204,8 +204,6 @@ export const resetPassword = async (req, res) => {
                 await user.save();
 
                 res.json({ message: 'Great! Now you can login with your new password' });
-
-
             } else { return res.status(401).json({ error: 'Expired link. Try again' }); }
         } catch (err) { res.status(400).json({ error: errorHandler(err) }); }
     }
