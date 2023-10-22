@@ -4,36 +4,30 @@ import jwt from "jsonwebtoken"
 import _ from "lodash"
 import { expressjwt } from "express-jwt"
 import "dotenv/config.js";
+import { errorHandler } from "../helpers/dbErrorHandler.js"
 import sgMail from "@sendgrid/mail"
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-export const preSignup = (req, res) => {
-    const { name, email, username, password } = req.body;
-    User.findOne({ email: email.toLowerCase() }, (err, user) => {
-        if (user) {
-            return res.status(400).json({
-                error: 'Email is taken'
-            });
-        }
+export const preSignup = async (req, res) => {
+    try {
+        const { name, email, username, password } = req.body;
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingUser) { return res.status(400).json({ error: 'Email is taken' }); }
         const token = jwt.sign({ name, username, email, password }, process.env.JWT_ACCOUNT_ACTIVATION, { expiresIn: '10m' });
- 
+
         const emailData = {
             from: process.env.EMAIL_FROM,
             to: email,
-            subject: `Account activation link`,
+            subject: 'Account activation link',
             html: `
-            <p>Please use the following link to activate your acccount:</p>
+            <p>Please use the following link to activate your account:</p>
             <p>${process.env.MAIN_URL}/auth/account/activate/${token}</p>
             <hr />
-        `
+            `
         };
-
-        sgMail.send(emailData).then(sent => {
-            return res.json({
-                message: `Email has been sent to ${email}. Follow the instructions to activate your account.`
-            });
-        });
-    });
+        await sgMail.send(emailData);
+        res.json({ message: `Email has been sent to ${email}. Follow the instructions to activate your account.` });
+    } catch (err) { res.status(400).json({ error: errorHandler(err) }); }
 };
 
 
@@ -74,70 +68,40 @@ export const signup = async (req, res) => {
 };
 */
 
-export const signup = (req, res) => {
+export const signup = async (req, res) => {
     const token = req.body.token;
     if (token) {
-        jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION, function (err, decoded) {
-            if (err) {
-                return res.status(401).json({
-                    error: 'Expired link. Signup again'
-                });
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION);
+
+            if (decoded) {
+                const { name, username, email, password } = jwt.decode(token);
+                const usernameurl = username.toLowerCase();
+                const profile = `${process.env.CLIENT_URL}/profile/${usernameurl}`;
+                const user = new User({ name, email, password, profile, username });
+                await user.save();
+                res.json({ message: 'Signup success! Please sign in' });
             }
+            else { res.status(401).json({ error: 'Expired link. Signup again' }); }
 
-            const { name, username, email, password } = jwt.decode(token);
-
-            // let username = shortId.generate();
-            // let profile = `${process.env.CLIENT_URL}/profile/${username}`;
-            let usernameurl = username.toLowerCase();
-            let profile = `${process.env.CLIENT_URL}/profile/${usernameurl}`;
-
-            const user = new User({ name, email, password, profile, username });
-            user.save((err, user) => {
-                if (err) {
-                    return res.status(401).json({
-                        error: errorHandler(err)
-                    });
-                }
-                return res.json({
-                    message: 'Singup success! Please signin'
-                });
-            });
-        });
-    } else {
-        return res.json({
-            message: 'Something went wrong. Try again'
-        });
-    }
+        } catch (err) { res.status(401).json({ error: 'Expired link. Signup again' }); }
+    } else { res.json({ message: 'Something went wrong. Try again' }); }
 };
 
 
 
+export const signin = async (req, res) => {
+    const { password } = req.body;
+    try {
+        const user = await User.findOne({ email: req.body.email }).exec();
 
-export const signin = (req, res) => {
-    const { email, password } = req.body;
-    // check if user exist
-    User.findOne({ email }).exec((err, user) => {
-        if (err || !user) {
-            return res.status(400).json({
-                error: 'User with that email does not exist. Please signup.'
-            });
-        }
-        // authenticate
-        if (!user.authenticate(password)) {
-            return res.status(400).json({
-                error: 'Email and password do not match.'
-            });
-        }
-        // generate a token and send to client
+        if (!user) { return res.status(400).json({ error: 'User with that email does not exist. Please sign up.' }); }
+        if (!user.authenticate(password)) { return res.status(400).json({ error: 'Email and password do not match.' }); }
         const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '10d' });
-
         res.cookie('token', token, { expiresIn: '1d' });
         const { _id, username, name, email, role } = user;
-        return res.json({
-            token,
-            user: { _id, username, name, email, role }
-        });
-    });
+        res.json({ token, user: { _id, username, name, email, role } });
+    } catch (err) { res.status(400).json({ error: errorHandler(err) }); }
 };
 
 
@@ -145,9 +109,7 @@ export const signin = (req, res) => {
 
 export const signout = (req, res) => {
     res.clearCookie('token');
-    res.json({
-        message: 'Signout success'
-    });
+    res.json({ message: 'Signout success' });
 };
 
 
@@ -159,138 +121,92 @@ export const requireSignin = expressjwt({
 
 
 
-export const authMiddleware = (req, res, next) => {
-    const authUserId = req.auth._id;
-    User.findById({ _id: authUserId }).exec((err, user) => {
-        if (err || !user) {
-            return res.status(400).json({
-                error: 'User not found'
-            });
-        }
+export const authMiddleware = async (req, res, next) => {
+    try {
+        const authUserId = req.auth._id;
+        const user = await User.findById({ _id: authUserId }).exec();
+
+        if (!user) { return res.status(400).json({ error: 'User not found' }); }
         req.profile = user;
         next();
-    });
+    } catch (err) { res.status(400).json({ error: errorHandler(err) }); }
 };
 
 
 
-export const adminMiddleware = (req, res, next) => {
-    const adminUserId = req.auth._id;
-    User.findById({ _id: adminUserId }).exec((err, user) => {
-        if (err || !user) {
-            return res.status(400).json({
-                error: 'User not found'
-            });
-        }
-
-        if (user.role !== 1) {
-            return res.status(400).json({
-                error: 'Admin resource. Access denied'
-            });
-        }
+export const adminMiddleware = async (req, res, next) => {
+    try {
+        const adminUserId = req.auth._id;
+        const user = await User.findById({ _id: adminUserId }).exec();
+        if (!user) { return res.status(400).json({ error: 'User not found' }); }
+        if (user.role !== 1) { return res.status(400).json({ error: 'Admin resource. Access denied' }); }
         req.profile = user;
         next();
-    });
+    } catch (err) { res.status(400).json({ error: errorHandler(err) }); }
 };
 
 
-export const canUpdateDeleteBlog = (req, res, next) => {
-    const slug = req.params.slug.toLowerCase();
-    Blog.findOne({ slug }).exec((err, data) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
-        let authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
-        if (!authorizedUser) {
-            return res.status(400).json({
-                error: 'You are not authorized'
-            });
-        }
+
+export const canUpdateDeleteBlog = async (req, res, next) => {
+    try {
+        const slug = req.params.slug.toLowerCase();
+        const data = await Blog.findOne({ slug }).exec();
+
+        if (!data) { return res.status(400).json({ error: errorHandler(err) }); }
+        const authorizedUser = data.postedBy._id.toString() === req.profile._id.toString();
+
+        if (!authorizedUser) { return res.status(400).json({ error: 'You are not authorized' }); }
         next();
-    });
+    } catch (err) { res.status(400).json({ error: errorHandler(err) }); }
 };
 
 
 
-
-export const forgotPassword = (req, res) => {
-    const { email } = req.body;
-
-    User.findOne({ email }, (err, user) => {
-        if (err || !user) {
-            return res.status(401).json({
-                error: 'User with that email does not exist'
-            });
-        }
-
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) { return res.status(400).json({ error: 'User with that email does not exist' }); }
         const token = jwt.sign({ _id: user._id }, process.env.JWT_RESET_PASSWORD, { expiresIn: '10m' });
-
-        // email
-
         const emailData = {
             from: process.env.EMAIL_FROM,
             to: email,
-            subject: `Password reset link`,
+            subject: 'Password reset link',
             html: `
             <p>Please use the following link to reset your password:</p>
-            <p>${process.env.CLIENT_URL}/auth/password/reset/${token}</p>
+            <p>${process.env.MAIN_URL}/auth/password/reset/${token}</p>
             <hr />
-            <p>This email may contain sensetive information</p>
-            <p>https://seoblog.com</p>
-        `
+            <p>This email may contain sensitive information</p>
+            <p>${process.env.MAIN_URL}</p>
+            `
         };
-        // populating the db > user > resetPasswordLink
-        return user.updateOne({ resetPasswordLink: token }, (err, success) => {
-            if (err) {
-                return res.json({ error: errorHandler(err) });
-            } else {
-                sgMail.send(emailData).then(sent => {
-                    return res.json({
-                        message: `Email has been sent to ${email}. Follow the instructions to reset your password. Link expires in 10min.`
-                    });
-                });
-            }
-        });
-    });
+        await user.updateOne({ resetPasswordLink: token });
+        await sgMail.send(emailData);
+        res.json({ message: `Email has been sent to ${email}. Follow the instructions to reset your password. Link expires in 10 minutes.` });
+    } catch (err) { res.json({ error: errorHandler(err) }); }
 };
 
-export const resetPassword = (req, res) => {
+
+
+
+
+export const resetPassword = async (req, res) => {
     const { resetPasswordLink, newPassword } = req.body;
-
     if (resetPasswordLink) {
-        jwt.verify(resetPasswordLink, process.env.JWT_RESET_PASSWORD, function (err, decoded) {
-            if (err) {
-                return res.status(401).json({
-                    error: 'Expired link. Try again'
-                });
-            }
-            User.findOne({ resetPasswordLink }, (err, user) => {
-                if (err || !user) {
-                    return res.status(401).json({
-                        error: 'Something went wrong. Try later'
-                    });
-                }
-                const updatedFields = {
-                    password: newPassword,
-                    resetPasswordLink: ''
-                };
+        try {
+            const decoded = jwt.verify(resetPasswordLink, process.env.JWT_RESET_PASSWORD);
+            if (decoded) {
+                const user = await User.findOne({ resetPasswordLink });
 
-                user = _.extend(user, updatedFields);
+                if (!user) { return res.status(401).json({ error: 'Something went wrong. Try later' }); }
+                const updatedFields = { password: newPassword, resetPasswordLink: '' };
+                user.set(updatedFields);
+                await user.save();
 
-                user.save((err, result) => {
-                    if (err) {
-                        return res.status(400).json({
-                            error: errorHandler(err)
-                        });
-                    }
-                    res.json({
-                        message: `Great! Now you can login with your new password`
-                    });
-                });
-            });
-        });
+                res.json({ message: 'Great! Now you can login with your new password' });
+
+
+            } else { return res.status(401).json({ error: 'Expired link. Try again' }); }
+        } catch (err) { res.status(400).json({ error: errorHandler(err) }); }
     }
 };
-

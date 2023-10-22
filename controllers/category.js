@@ -4,71 +4,46 @@ import { errorHandler } from "../helpers/dbErrorHandler.js"
 import Blog from "../models/blog.js"
 
 
-export const create = (req, res) => {
+export const create = async (req, res) => {
     const { name, description } = req.body;
-    let slug = slugify(name).toLowerCase();
-
-    let category = new Category({ name, description, slug });
-
-    category.save((err, data) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
+    const slug = slugify(name).toLowerCase();
+    try {
+        const category = new Category({ name, description, slug });
+        const data = await category.save();
         res.json(data);
-    });
-};
-
-export const list = (req, res) => {
-    Category.find({}).exec((err, data) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
-        res.json(data);
-    });
+    } catch (err) {res.status(400).json({ error: errorHandler(err)});}  
 };
 
 
-export const read = (req, res) => {
+export const list = async (req, res) => {
+    try {
+        const data = await Category.find({}).exec();
+        res.json(data);
+    } catch (err) {res.status(400).json({error: errorHandler(err)});}  
+};
+
+
+export const read = async (req, res) => {
     const slug = req.params.slug.toLowerCase();
+    try {
+        const category = await Category.findOne({ slug }).exec();
+        if (!category) {return res.status(400).json({error: 'Category not found'}); }
 
-    Category.findOne({ slug }).exec((err, category) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
-        // res.json(category);
-        Blog.find({ categories: category })
+        const blogs = await Blog.find({ categories: category })
             .populate('categories', '_id name slug')
             .populate('tags', '_id name slug')
             .populate('postedBy', '_id name username')
             .select('_id title slug excerpt categories date postedBy tags')
-            .exec((err, data) => {
-                if (err) {
-                    return res.status(400).json({
-                        error: errorHandler(err)
-                    });
-                }
-                res.json({ category: category, blogs: data });
-            });
-    });
+            .exec();
+        res.json({ category, blogs });
+    } catch (err) {res.status(400).json({error: errorHandler(err)}); }   
 };
 
-export const remove = (req, res) => {
+export const remove = async (req, res) => {
     const slug = req.params.slug.toLowerCase();
-
-    Category.findOneAndRemove({ slug }).exec((err, data) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
-        res.json({
-            message: 'Category deleted successfully'
-        });
-    });
+    try {
+        const data = await Category.findOneAndRemove({ slug }).exec();
+        if (!data) {  return res.status(400).json({error: 'Category not found' }); }
+        res.json({message: 'Category deleted successfully'});
+    } catch (err) {res.status(400).json({error: errorHandler(err)});}   
 };

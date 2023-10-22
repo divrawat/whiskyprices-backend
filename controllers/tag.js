@@ -1,73 +1,53 @@
-import Tag  from '../models/tag.js';
+import Tag from '../models/tag.js';
 import slugify from "slugify";
 import { errorHandler } from "../helpers/dbErrorHandler.js";
 import Blog from "../models/blog.js"
 
-export const create = (req, res) => {
-    const { name, description } = req.body;
-    let slug = slugify(name).toLowerCase();
-
-    let tag = new Tag({ name, description, slug });
-
-    tag.save((err, data) => {
-        if (err) {
-            console.log(err);
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
-        res.json(data); 
-    });
-};
-
-export const list = (req, res) => {
-    Tag.find({}).exec((err, data) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
+export const create = async (req, res) => {
+    try {
+        const { name, description } = req.body;
+        const slug = slugify(name).toLowerCase();
+        const tag = new Tag({ name, description, slug });
+        const data = await tag.save();
         res.json(data);
-    });
+    } catch (err) { res.status(400).json({ error: errorHandler(err) }); }
 };
 
-export const read = (req, res) => {
+
+
+export const list = async (req, res) => {
+    try {
+        const data = await Tag.find({}).exec();
+        res.json(data);
+    } catch (err) { res.status(400).json({ error: errorHandler(err) }); }
+};
+
+
+
+export const read = async (req, res) => {
     const slug = req.params.slug.toLowerCase();
 
-    Tag.findOne({ slug }).exec((err, tag) => {
-        if (err) {
-            return res.status(400).json({
-                error: 'Tag not found'
-            });
-        }
-        // res.json(tag);
-        Blog.find({ tags: tag })
+    try {
+        const tag = await Tag.findOne({ slug }).exec();
+        if (!tag) { return res.status(400).json({ error: 'Tag not found' }); }
+
+        const blogs = await Blog.find({ tags: tag })
             .populate('categories', '_id name slug')
             .populate('tags', '_id name slug')
             .populate('postedBy', '_id name username')
             .select('_id title slug excerpt categories date postedBy tags')
-            .exec((err, data) => {
-                if (err) {
-                    return res.status(400).json({
-                        error: errorHandler(err)
-                    });
-                }
-                res.json({ tag: tag, blogs: data });
-            });
-    });
+            .exec();
+
+        res.json({ tag, blogs });
+    } catch (err) { res.status(400).json({ error: errorHandler(err) }); }
 };
 
-export const remove = (req, res) => {
+export const remove = async (req, res) => {
     const slug = req.params.slug.toLowerCase();
 
-    Tag.findOneAndRemove({ slug }).exec((err, data) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
-        res.json({
-            message: 'Tag deleted successfully'
-        });
-    });
+    try {
+        const data = await Tag.findOneAndRemove({ slug }).exec();
+        if (!data) { return res.status(400).json({ error: 'Tag not found' }); }
+        res.json({ message: 'Tag deleted successfully' });
+    } catch (err) {res.status(400).json({error: errorHandler(err)}); } 
 };

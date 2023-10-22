@@ -8,7 +8,6 @@ const blogSchema = new mongoose.Schema(
             trim: true,
             min: 3,
             max: 160,
-            required: true
         },
         slug: {
             type: String,
@@ -18,29 +17,21 @@ const blogSchema = new mongoose.Schema(
         },
         body: {
             type: {},
-            required: true,
-            min: 200,
-            max: 2000000
         },
         excerpt: {
             type: String,
-            max: 1000
         },
         mtitle: {
             type: String
         },
         mdesc: {
-            // type: {}
             type: String
         },
         date: {
             type: Date,
-            required: true,
-            // default: Date.now,
         },
         photo: {
-            data: Buffer,
-            contentType: String
+            type: String
         },
         categories: [{ type: ObjectId, ref: 'Category', required: true }],
         tags: [{ type: ObjectId, ref: 'Tag'}],
@@ -49,10 +40,6 @@ const blogSchema = new mongoose.Schema(
             ref: 'User'
         }
     },
-    // { timestamp: true }
 );
-
-// module.exports = mongoose.model('Blog', blogSchema);
-
 
 export default mongoose.model('Blog', blogSchema);
