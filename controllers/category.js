@@ -33,7 +33,7 @@ export const read = async (req, res) => {
             .populate('categories', '_id name slug')
             .populate('tags', '_id name slug')
             .populate('postedBy', '_id name username')
-            .select('_id title slug excerpt categories date postedBy tags')
+            .select('_id title photo slug excerpt categories date postedBy tags')
             .exec();
         res.json({ category, blogs });
     } catch (err) {res.status(400).json({error: errorHandler(err)}); }   
