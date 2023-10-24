@@ -163,7 +163,7 @@ export const listRelated = async (req, res) => {
     try {
         const { _id, categories } = req.body.blog;
         const blogs = await Blog.find({ _id: { $ne: _id }, categories: { $in: categories } })
-            .limit(6).populate('postedBy', '_id name username').select('title slug date postedBy').exec();
+            .limit(6).populate('postedBy', '_id name username').select('title slug date photo postedBy').exec();
         res.json(blogs);
     } catch (err) { res.json({ error: errorHandler(err) }); }
 };
