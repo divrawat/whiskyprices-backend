@@ -78,10 +78,9 @@ export const update = async (req, res) => {
             if (categories) { oldBlog.categories = categories.split(',').map(category => category.trim()) }
 
             const result = await oldBlog.save();
-            res.json(result);
-
             await fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${result.slug}`, { method: 'POST' });
             await fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, { method: 'POST' });
+            res.json(result);
 
         });
     } catch (error) { return res.status(500).json({ error: 'Internal Server Error' }) }
