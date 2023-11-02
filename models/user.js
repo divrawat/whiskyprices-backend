@@ -24,10 +24,6 @@ const userSchema = new mongoose.Schema(
             unique: true,
             lowercase: true
         },
-        profile: {
-            type: String,
-            required: true
-        },
         hashed_password: {
             type: String,
             required: true
@@ -90,6 +86,5 @@ userSchema.methods = {
     }
 };
 
-// module.exports = mongoose.model('User', userSchema);
 export default mongoose.model('User', userSchema);
 

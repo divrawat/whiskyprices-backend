@@ -76,9 +76,7 @@ export const signup = async (req, res) => {
 
             if (decoded) {
                 const { name, username, email, password } = jwt.decode(token);
-                const usernameurl = username.toLowerCase();
-                const profile = `${process.env.CLIENT_URL}/profile/${usernameurl}`;
-                const user = new User({ name, email, password, profile, username });
+                const user = new User({ name, email, password, username });
                 await user.save();
                 res.json({ message: 'Signup success! Please sign in' });
             }

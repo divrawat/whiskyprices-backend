@@ -140,7 +140,7 @@ export const listAllBlogsCategoriesTags = async (req, res) => {
     try {
         const blogs = await Blog.find({}).sort({ date: -1 })
             .populate('categories', '_id name slug')
-            .populate('postedBy', '_id name username profile').select('_id title photo slug excerpt categories date postedBy') .exec();
+            .populate('postedBy', '_id name username').select('_id title photo slug excerpt categories date postedBy') .exec();
         res.json({ blogs, size: blogs.length });
     } catch (err) { res.json({ error: errorHandler(err) }); }
 };
