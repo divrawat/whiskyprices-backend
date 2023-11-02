@@ -66,7 +66,7 @@ export const update = async (req, res) => {
 
             _.merge(oldBlog, fields);
 
-            const { title, mtitle, mdesc, body, categories } = fields;
+            const { title, mtitle, mdesc, body, categories, slug } = fields;
 
             if (mtitle === '') { return res.status(400).json({ error: 'MTitle is required' }) }
             if (title === '') { return res.status(400).json({ error: 'title is required' }) }
