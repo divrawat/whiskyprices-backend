@@ -6,9 +6,7 @@ import cors from "cors";
 import  mongoose from "mongoose";
 import blogRoutes from "./routes/blog.js";
 import authRoutes from "./routes/auth.js";
-import userRoutes from "./routes/user.js";
 import categoryRoutes from "./routes/category.js";
-import formRoutes from "./routes/form.js"
 import ImageRoutes from "./routes/images.js";
 import storyRoutes from "./routes/slides.js";
 import "dotenv/config.js";
@@ -24,9 +22,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use('/api', blogRoutes);
 app.use('/api', authRoutes);
-app.use('/api', userRoutes);
 app.use('/api', categoryRoutes);
-app.use('/api', formRoutes);
 app.use('/api', ImageRoutes);
 app.use('/api', storyRoutes);
 
