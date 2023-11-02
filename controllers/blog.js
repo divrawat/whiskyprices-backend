@@ -7,7 +7,6 @@ import User from "../models/user.js"
 import striptags from 'striptags';
 import "dotenv/config.js";
 
-
 export const create = async (req, res) => {
     try {
         const form = new formidable.IncomingForm();
