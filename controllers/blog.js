@@ -150,7 +150,7 @@ export const read = async (req, res) => {
     try {
         const slug = req.params.slug.toLowerCase();
         const data = await Blog.findOne({ slug })
-            .populate('categories', '_id name slug').populate('tags', '_id name slug').populate('postedBy', '_id name username')
+            .populate('categories', '_id name slug').populate('postedBy', '_id name username')
             .select('_id photo title body slug mtitle mdesc date categories tags postedBy') .exec();
         if (!data) { return res.status(404).json({ error: 'Blogs not found' }); }
         res.json(data);
