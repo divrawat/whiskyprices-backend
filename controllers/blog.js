@@ -130,7 +130,7 @@ export const feeds = async (req, res) => {
 export const list = async (req, res) => {
     try {
         const data = await Blog.find({})
-            .populate('postedBy', '_id name username').sort({ date: -1 }).select('_id title slug categories tags date postedBy').exec();  
+            .populate('postedBy', '_id name username').sort({ date: -1 }).select('_id title slug categories date postedBy').exec();  
         res.json(data);
     } catch (err) { res.json({ error: errorHandler(err) }); }
 };
@@ -141,7 +141,7 @@ export const listAllBlogsCategoriesTags = async (req, res) => {
     try {
         const blogs = await Blog.find({}).sort({ date: -1 })
             .populate('categories', '_id name slug')
-            .populate('postedBy', '_id name username profile').select('_id title photo slug excerpt categories date tags postedBy') .exec();
+            .populate('postedBy', '_id name username profile').select('_id title photo slug excerpt categories date postedBy') .exec();
         res.json({ blogs, size: blogs.length });
     } catch (err) { res.json({ error: errorHandler(err) }); }
 };
@@ -153,7 +153,7 @@ export const read = async (req, res) => {
         const slug = req.params.slug.toLowerCase();
         const data = await Blog.findOne({ slug })
             .populate('categories', '_id name slug').populate('postedBy', '_id name username')
-            .select('_id photo title body slug mtitle mdesc date categories tags postedBy') .exec();
+            .select('_id photo title body slug mtitle mdesc date categories postedBy') .exec();
         if (!data) { return res.status(404).json({ error: 'Blogs not found' }); }
         res.json(data);
     } catch (err) { res.json({ error: errorHandler(err) }); }
