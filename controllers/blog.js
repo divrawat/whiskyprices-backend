@@ -135,10 +135,12 @@ export const list = async (req, res) => {
     } catch (err) { res.json({ error: errorHandler(err) }); }
 };
 
+
+
 export const listAllBlogsCategoriesTags = async (req, res) => {
     try {
         const blogs = await Blog.find({}).sort({ date: -1 })
-            .populate('categories', '_id name slug').populate('tags', '_id name slug')
+            .populate('categories', '_id name slug')
             .populate('postedBy', '_id name username profile').select('_id title photo slug excerpt categories date tags postedBy') .exec();
         res.json({ blogs, size: blogs.length });
     } catch (err) { res.json({ error: errorHandler(err) }); }
@@ -167,29 +169,6 @@ export const listRelated = async (req, res) => {
         res.json(blogs);
     } catch (err) { res.json({ error: errorHandler(err) }); }
 };
-
-
-
-export const listSearch = async (req, res) => {
-    const { search } = req.query;
-    if (search) {
-        Blog.find({
-            $or: [
-                { title: { $regex: search, $options: 'i' } },
-                { body: { $regex: search, $options: 'i' }
-                }
-            ]
-        }).select('-photo -body').exec((err, blogs) => {
-            if (err) {
-                return res.status(400).json({
-                    error: errorHandler(err)
-                });
-            }
-            res.json(blogs);
-        });
-    }
-};
-
 
 
 export const listByUser = async (req, res) => {
