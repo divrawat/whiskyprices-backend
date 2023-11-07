@@ -28,13 +28,12 @@ const blogSchema = new mongoose.Schema(
             type: String
         },
         date: {
-            type: Date,
+            type: String,
         },
         photo: {
             type: String
         },
         categories: [{ type: ObjectId, ref: 'Category', required: true }],
-        tags: [{ type: ObjectId, ref: 'Tag'}],
         postedBy: {
             type: ObjectId,
             ref: 'User'
