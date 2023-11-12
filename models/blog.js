@@ -28,7 +28,7 @@ const blogSchema = new mongoose.Schema(
             type: String
         },
         date: {
-            type: String,
+            type: Date,
         },
         photo: {
             type: String

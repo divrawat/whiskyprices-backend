@@ -9,7 +9,7 @@ router.get('/allwebstories', allstories);
 router.get('/allslugs', allslugs);
 router.get('/sitemap', sitemap);
 router.delete('/webstorydelete/:slug', requireSignin, adminMiddleware, deletestory);
-router.patch('/webstoriesupdate/:slug', requireSignin, adminMiddleware, updateStory);
+router.put('/webstoriesupdate/:slug', requireSignin, adminMiddleware, updateStory);
 
 
 
