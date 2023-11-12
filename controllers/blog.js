@@ -1,91 +1,84 @@
-import Blog from "../models/blog.js"
-import _ from "lodash"
-import formidable from "formidable"
-import { errorHandler } from "../helpers/dbErrorHandler.js"
-import slugify from "slugify"
-import User from "../models/user.js"
+import Blog from "../models/blog.js";
+import multer from 'multer';
+const upload = multer({});
+import { errorHandler } from "../helpers/dbErrorHandler.js";
+import slugify from "slugify";
+import User from "../models/user.js";
 import striptags from 'striptags';
 import "dotenv/config.js";
-import { format } from 'date-fns';
+
 
 export const create = async (req, res) => {
-    try {
-        const form = new formidable.IncomingForm();
-        form.keepExtensions = true;
-
-        form.parse(req, async (err, fields, files) => {
-            if (err) { return res.status(400).json({ error: 'Image could not upload' }); }
-
-            const { title, body, slug, mtitle, mdesc, date, categories, photo } = fields;
-            if (!categories || categories.length === 0) { return res.status(400).json({ error: 'At least one category is required' }) }
-
-            let blog = new Blog();
-            let strippedContent = striptags(body);
-            let excerpt0 = strippedContent.slice(0, 150);
-            let arrayOfCategories = categories && categories.split(',');
-            blog.title = title;
-            blog.body = body;
-            blog.slug = slugify(slug).toLowerCase();
-            blog.mtitle = mtitle;
-            blog.mdesc = mdesc;
-            const mydate = new Date(date);
-            const formattedDate = format(mydate, 'dd MMM, yyyy');
-            blog.date = formattedDate;
-            blog.photo = photo;
-            blog.excerpt = excerpt0;
-            blog.postedBy = req.auth._id;
-            await blog.save();
-            const updatedBlog = await Blog.findByIdAndUpdate(blog._id, { $push: { categories: arrayOfCategories } }, { new: true }).exec();
-            await fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${blog.slug}`, { method: 'POST' });
-            await fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, { method: 'POST' });
-            res.json(updatedBlog);
-        });
-    } catch (error) { res.status(400).json({ "Error": "Something Went Wrong" }) }
-};
-
-
+    upload.none()(req, res, async (err) => {
+      if (err) { return res.status(400).json({ error: 'Something went wrong' }) }
+      const { title, description, slug, photo, categories, mtitle, mdesc, date, body } = req.body;
+  
+      if (!categories || categories.length === 0) { return res.status(400).json({ error: 'At least one category is required' }) }
+  
+      let blog = new Blog();
+      blog.title = title;
+      blog.slug = slugify(slug).toLowerCase();
+      blog.description = description;
+      blog.mtitle = mtitle;
+      blog.mdesc = mdesc;
+      blog.photo = photo;
+      blog.date = date;
+      blog.body = body;
+      blog.postedBy = req.auth._id;
+      let strippedContent = striptags(body);
+      let excerpt0 = strippedContent.slice(0, 150);
+      blog.excerpt = excerpt0;
+      try {
+        let arrayOfCategories = categories && categories.split(',');
+        await blog.save();
+        const updatedBlog = await Blog.findByIdAndUpdate(blog._id, { $push: {categories: { $each: arrayOfCategories }
+        } }, { new: true }).exec();
+        res.json(updatedBlog);
+        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${blog.slug}`, { method: 'POST' })
+        fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, { method: 'POST' })
+      } catch (error) { return res.status(500).json({ error: "Slug should be unique" }) }
+    });
+  };
 
 
 export const update = async (req, res) => {
-    try {
+
+    upload.none()(req, res, async (err) => {
+      if (err) { return res.status(400).json({ error: 'Something went wrong' }) }
+  
+      const updateFields = req.body;
+  
+      try {
         const slug = req.params.slug.toLowerCase();
-        const oldBlog = await Blog.findOne({ slug });
-
-        if (!oldBlog) { return res.status(404).json({ error: 'Blog not found' }); }
-
-        const form = new formidable.IncomingForm();
-        form.keepExtensions = true;
-
-        form.parse(req, async (err, fields, files) => {
-            if (err) { return res.status(400).json({ error: 'Image could not upload' }); }
-
-            _.merge(oldBlog, fields);
-
-            const {body, categories, slug, date } = fields;
-
-            if (slug) { oldBlog.slug = slugify(slug).toLowerCase(); }
-
-            if (date){
-                const mydate = new Date(date);
-                const formattedDate = format(mydate, 'dd MMM, yyyy');
-                console.log(formattedDate);
-                oldBlog.date=formattedDate;
-            }
-
-            const strippedContent = striptags(body);
-            const excerpt = strippedContent.slice(0, 150);
-            if (body) { oldBlog.excerpt = excerpt; }
-            if (categories) { oldBlog.categories = categories.split(',').map(category => category.trim()) }
-
-            const result = await oldBlog.save();
-            await fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${result.slug}`, { method: 'POST' });
-            await fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, { method: 'POST' });
-            res.json(result);
-
+        if (!slug) { return res.status(404).json({ error: 'Blog not found' }) }
+  
+        let blog = await Blog.findOne({ slug }).exec();
+  
+        Object.keys(updateFields).forEach((key) => {
+          if (key === 'title') { blog.title = updateFields.title; }
+          else if (key === 'description') { blog.description = updateFields.description; }
+          else if (key === 'mtitle') { blog.mtitle = updateFields.mtitle; }
+          else if (key === 'mdesc') { blog.mdesc = updateFields.mdesc; }
+          else if (key === 'date') { blog.date = updateFields.date; }
+          else if (key === 'body') { blog.body = updateFields.body; }
+          else if (key === 'categories') { blog.categories = updateFields.categories.split(',').map(category => category.trim()); }
+          else if (key === 'excerpt') { blog.excerpt = updateFields.strippedContent.slice(0, 150);} 
+          else if (key === 'slug') { blog.slug = slugify(updateFields.slug).toLowerCase(); }
+          else if (key === 'photo') { blog.photo = updateFields.photo; }
         });
-    } catch (error) { return res.status(500).json({ error: 'Internal Server Error' }) }
+        const savedBlog = await blog.save();
 
-};
+         fetch(`${process.env.MAIN_URL}/api/revalidate?path=/${blog.slug}`, { method: 'POST' });
+         fetch(`${process.env.MAIN_URL}/api/revalidate?path=/`, { method: 'POST' });
+         
+        return res.status(200).json(savedBlog);
+      } catch (error) {
+        console.error("Error updating Blog:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
+    });
+    
+  };
 
 
 
